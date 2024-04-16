@@ -1,79 +1,70 @@
-# UA Cloud Twin
-A cloud-based Digital Twin Definition Language (DTDL) adapter for OPC UA data. It connects to an MQTT or Kafka broker, subscribes to a topic containing OPC UA PubSub telemetry messages, parses these messages and automatically extracts OPC UA-enables asset names from the telemetry stream and then creates digital twins for each asset indentified in Azure Digital Twins service in DTDL format, leveraging the ISA95 ontology. It then proceeds to update telemetry "tags" for each digital twin created with the relevant OPC UA PubSub datasets, all fully automatically.
-
-UA Cloud Twin creates a digital twin for each namespace in each OPC UA server discovered within the OPC UA PubSub telemetry stream it reads from the broker, so for best results give each asset connected to your OPC UA servers its own namespace.
-
-UA Cloud Twin uses username and password authentication by default, but other authentication providers can be added, please let us know what you would like and open a feature request as an issue on GitHub.
-
-## How UA Cloud Twin maps OPC UA Metadata to Digital Twins
-
-UA Cloud Twin creates digital twins for industrial assets by looking at the OPC UA PubSub Metadata messages' name property in the format `OPCUAApplicationURI;OPCUANamespaceURI;NodeID`. Please set your name property within a metadata message appropriately for best results.
-
-Since the OPC UA application URI of your OPC UA servers is supposed to be globally unique, it also makes sense to set it to something meaningful, e.g. the ISA95 hierarchy enterprise->site->area->line->workcell. For instance, an OPC UA server application URI may be urn:assembly.line1.building1.munich.contoso.
-
-When PROCESS_TELEMETRY_MESSAGES is set to 1, UA Cloud Twin also creates digital twins one level below the industrial assets digital twins based on the field names in the OPC UA PubSub DataSet messages and constructs the name in the format `OPCUAApplicationURI;OPCUANamespaceURI;FieldName;NodeID`.
-
-If no OPC UA PubSub Metadata messages were received and the IGNORE_MISSING_METADATA environment variable is defined, UA Cloud Twin creates digital twins for assets in the format `OPCUAPubSubPublisherID` and `OPCUAPubSubPublisherID;DatasetWriterID;DatasetFieldIndex` one level below.
-
-For the Azure Digital Twin service implementation, the OPC UA telemetry fields are assigned using the following pattern:
-
-* OPCUADisplayName = `FieldName`
-* OPCUANodeId = `OPCUANamespaceURI;NodeID`
-* OPCUANodeValue = `[the Dataset Field value received, while "flattening" any OPC UA complex types received]`
-
-## Installation
-
-The following environment variables **must** be defined:
-
-* ADMIN_USERNAME - the name for the admin of UA Cloud Twin
-* ADMIN_PASSWORD - the password of the admin of UA Cloud Twin
-* AZURE_TENANT_ID - the Azure tenant ID of your AAD instance. This can be retrieved from the Azure portal under Azure Active Directory -> Overview
-* AZURE_CLIENT_ID - the Azure client ID of UA Cloud Twin. A client ID can be created through AAD app registration in the Azure portal under Azure Active Directory -> Overview -> Add -> App Registration
-* AZURE_CLIENT_SECRET - the Azure client secret of UA Cloud Twin. A client secret can be added after AAD app registration under Add a certificate or secret -> New client secret
-
-To successfully connect to an Azure Digital Twins service instance, the above AAD app registration must be assigned to the Azure Digital Twins Data Owner role.
-
-The following environment variables **can optionally** be defined:
-
-* BROKER_NAME - the name of the broker to use
-* BROKER_PORT - the port number of the broker
-* CLIENT_NAME - the client name to use with the broker
-* BROKER_USERNAME - the username to use with the broker
-* BROKER_PASSWORD - the password to use with the broker
-* TOPIC - the broker topic to read messages from
-* METADATA_TOPIC - the broker metadata topic to read messages from
-* USE_MQTT - Read OPC UA PubSub telementry messages from an MQTT borker instead of a Kafka broker
-* USE_TLS - set to 1 to use Transport Layer Security
-* IGNORE_MISSING_METADATA - set to 1 to parse messages even if no metadata was sent for the messages
-* PROCESS_TELEMETRY_MESSAGES - set to 1 to process OPC UA telemetry messages in addition to processing OPC UA metadata messages
-* ADT_HOSTNAME - the hostname of the Azure Digital Twins instance UA Cloud Twin should connect to
-* USE_ISA95_EQUIPMENT_MODELS - Use the ISA95 equipment models (equipment and equipment property) for the mapping from OPC UA metadata to ISA95
-* USE_ADX - Use Azure Data Explorer for storing the digital twin graph instead of Azure Digital Twins service
-* ADX_INSTANCE_URL - URL of ADX cluster for DTDL models
-* ADX_DB_NAME - ADX database name for DTDL models
-* ADX_TABLE_NAME - ADX table name for DTDL models
-
-Alternatively, if an Azure IoT Hub or Azure Event Hubs are used for the broker, the Azure Event Hub connection string can be specified in the UI to avoid the need to specify the above environment variables. The Azure Event Hub connection string can be read in the Azure Portal for IoT Hub under Built-in Endpoints -> Event Hub-compatible endpoint and for Azure Event Hubs under Shared Access Policies -> RootManageSharedAccessKey -> Connection string-primary key.
-
-## Usage
-
-Run it on a Docker-enabled computer via:
-
-    docker run -e anEnvironmentVariableFromAbove="yourSetting" -p 80:80 ghcr.io/digitaltwinconsortium/ua-cloudtwin:main
-
-Alternatively, you can run it in a Docker-enabled web application in the Cloud.
-
-Then point your web browser to <http://yourIPAddress>
-
-You can optionally supply the following query parameters in the Url:
-
-* `?endpoint=your-broker-connection-string` - the connection string of the broker to use
-* `?instanceurl=your-adt-instance-url` - the URL of the Azure Digital Twins instance to use
-
-e.g. <https://localhost:5001/Setup?endpoint=[your-connection-string]&instanceUrl=[your-adt-instance-url]>
- 
-
-## Build Status
-
-[![Docker](https://github.com/digitaltwinconsortium/UA-CloudTwin/actions/workflows/docker-build.yml/badge.svg)](https://github.com/digitaltwinconsortium/UA-CloudTwin/actions/workflows/docker-build.yml)
-
+<div class="Box-sc-g0xbh4-0 bJMeLZ js-snippet-clipboard-copy-unpositioned" data-hpc="true"><article class="markdown-body entry-content container-lg" itemprop="text"><div class="markdown-heading" dir="auto"><h1 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">UA云双胞胎</font></font></h1><a id="user-content-ua-cloud-twin" class="anchor" aria-label="永久链接：UA 云双胞胎" href="#ua-cloud-twin"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">用于 OPC UA 数据的基于云的数字孪生定义语言 (DTDL) 适配器。它连接到 MQTT 或 Kafka 代理，订阅包含 OPC UA PubSub 遥测消息的主题，解析这些消息并自动从遥测流中提取支持 OPC UA 的资产名称，然后为 Azure 数字孪生服务中识别的每个资产创建数字孪生采用 DTDL 格式，利用 ISA95 本体。然后，它会继续更新使用相关 OPC UA PubSub 数据集创建的每个数字孪生的遥测“标签”，所有操作都是全自动的。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">UA Cloud Twin 为从代理读取的 OPC UA PubSub 遥测流中发现的每个 OPC UA 服务器中的每个命名空间创建一个数字孪生，因此为了获得最佳结果，为连接到 OPC UA 服务器的每个资产提供自己的命名空间。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">UA Cloud Twin 默认使用用户名和密码身份验证，但可以添加其他身份验证提供程序，请告诉我们您想要什么，并在 GitHub 上以问题形式提出功能请求。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">UA Cloud Twin 如何将 OPC UA 元数据映射到数字孪生</font></font></h2><a id="user-content-how-ua-cloud-twin-maps-opc-ua-metadata-to-digital-twins" class="anchor" aria-label="永久链接：UA Cloud Twin 如何将 OPC UA 元数据映射到数字孪生" href="#how-ua-cloud-twin-maps-opc-ua-metadata-to-digital-twins"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">UA Cloud Twin 通过查看格式为 的 OPC UA PubSub 元数据消息的名称属性，为工业资产创建数字孪生</font></font><code>OPCUAApplicationURI;OPCUANamespaceURI;NodeID</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。请在元数据消息中适当设置您的名称属性，以获得最佳结果。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">由于 OPC UA 服务器的 OPC UA 应用程序 URI 应该是全局唯一的，因此将其设置为有意义的值也是有意义的，例如 ISA95 层次结构企业-&gt;站点-&gt;区域-&gt;线路-&gt;工作单元。例如，OPC UA 服务器应用程序 URI 可能是 urn: assembly.line1.building1.munich.contoso。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">当 PROCESS_TELEMETRY_MESSAGES 设置为 1 时，UA Cloud Twin 还会根据 OPC UA PubSub DataSet 消息中的字段名称创建比工业资产数字孪生低一级的数字孪生，并以 格式构造名称</font></font><code>OPCUAApplicationURI;OPCUANamespaceURI;FieldName;NodeID</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果未收到 OPC UA PubSub 元数据消息并且定义了 IGNORE_MISSING_METADATA 环境变量，则 UA Cloud Twin 会为以下格式</font></font><code>OPCUAPubSubPublisherID</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">和</font></font><code>OPCUAPubSubPublisherID;DatasetWriterID;DatasetFieldIndex</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">下一级的资产创建数字孪生。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">对于 Azure 数字孪生服务实施，OPC UA 遥测字段使用以下模式分配：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OPCUA 显示名称 =</font></font><code>FieldName</code></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OPCUANodeId =</font></font><code>OPCUANamespaceURI;NodeID</code></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OPCUA节点值 =</font></font><code>[the Dataset Field value received, while "flattening" any OPC UA complex types received]</code></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装</font></font></h2><a id="user-content-installation" class="anchor" aria-label="永久链接：安装" href="#installation"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">必须</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">定义</font><font style="vertical-align: inherit;">以下环境变量：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADMIN_USERNAME - UA Cloud Twin 管理员的名称</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADMIN_PASSWORD - UA Cloud Twin 的管理员密码</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">AZURE_TENANT_ID - AAD 实例的 Azure 租户 ID。可以从 Azure 门户的 Azure Active Directory -&gt; 概述下检索此信息</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">AZURE_CLIENT_ID - UA 云孪生的 Azure 客户端 ID。可以通过 Azure 门户中的 Azure Active Directory -&gt; 概述 -&gt; 添加 -&gt; 应用程序注册下的 AAD 应用程序注册来创建客户端 ID</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">AZURE_CLIENT_SECRET - UA Cloud Twin 的 Azure 客户端密钥。可以在 AAD 应用程序注册后在添加证书或密钥 -&gt; 新客户端密钥下添加客户端密钥</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">要成功连接到 Azure 数字孪生服务实例，必须将上述 AAD 应用注册分配给 Azure 数字孪生数据所有者角色。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以选择</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">定义</font><font style="vertical-align: inherit;">以下环境变量：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BROKER_NAME - 要使用的经纪人的名称</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BROKER_PORT - 代理的端口号</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CLIENT_NAME - 与代理一起使用的客户端名称</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BROKER_USERNAME - 经纪商使用的用户名</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BROKER_PASSWORD - 代理使用的密码</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">TOPIC - 从中&ZeroWidthSpace;&ZeroWidthSpace;读取消息的代理主题</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">METADATA_TOPIC - 要从中读取消息的代理元数据主题</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">USE_MQTT - 从 MQTT borker 而不是 Kafka 代理读取 OPC UA PubSub 远程通讯消息</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">USE_TLS - 设置为 1 以使用传输层安全性</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">IGNORE_MISSING_METADATA - 设置为 1 以解析消息，即使没有为消息发送元数据</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">PROCESS_TELEMETRY_MESSAGES - 设置为 1 除了处理 OPC UA 元数据消息之外还处理 OPC UA 遥测消息</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADT_HOSTNAME - UA Cloud Twin 应连接到的 Azure 数字孪生实例的主机名</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">USE_ISA95_EQUIPMENT_MODELS - 使用 ISA95 设备模型（设备和设备属性）进行从 OPC UA 元数据到 ISA95 的映射</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">USE_ADX - 使用 Azure 数据资源管理器来存储数字孪生图，而不是 Azure 数字孪生服务</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADX_INSTANCE_URL - DTDL 模型的 ADX 集群的 URL</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADX_DB_NAME - DTDL 模型的 ADX 数据库名称</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ADX_TABLE_NAME - DTDL 模型的 ADX 表名称</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">或者，如果将 Azure IoT 中心或 Azure 事件中心用于代理，则可以在 UI 中指定 Azure 事件中心连接字符串，以避免指定上述环境变量。 Azure 事件中心连接字符串可以在 Azure 门户中的 IoT 中心的内置终结点 -&gt; 事件中心兼容终结点下读取，对于 Azure 事件中心，可以在共享访问策略 -&gt; RootManageSharedAccessKey -&gt; 连接字符串主键下读取。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">用法</font></font></h2><a id="user-content-usage" class="anchor" aria-label="永久链接：用法" href="#usage"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">通过以下方式在支持 Docker 的计算机上运行它：</font></font></p>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto"><pre class="notranslate"><code>docker run -e anEnvironmentVariableFromAbove="yourSetting" -p 80:80 ghcr.io/digitaltwinconsortium/ua-cloudtwin:main
+</code></pre><div class="zeroclipboard-container">
+    <clipboard-copy aria-label="Copy" class="ClipboardButton btn btn-invisible js-clipboard-copy m-2 p-0 tooltipped-no-delay d-flex flex-justify-center flex-items-center" data-copy-feedback="Copied!" data-tooltip-direction="w" value="docker run -e anEnvironmentVariableFromAbove=&quot;yourSetting&quot; -p 80:80 ghcr.io/digitaltwinconsortium/ua-cloudtwin:main" tabindex="0" role="button">
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-copy js-clipboard-copy-icon">
+    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+</svg>
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none">
+    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+</svg>
+    </clipboard-copy>
+  </div></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">或者，您可以在云中支持 Docker 的 Web 应用程序中运行它。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">然后将您的网络浏览器指向</font></font><a href="http://yourIPAddress" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">http://yourIPAddress</font></font></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">您可以选择在 Url 中提供以下查询参数：</font></font></p>
+<ul dir="auto">
+<li><code>?endpoint=your-broker-connection-string</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 要使用的代理的连接字符串</font></font></li>
+<li><code>?instanceurl=your-adt-instance-url</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 要使用的 Azure 数字孪生实例的 URL</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">例如</font></font><a href="https://localhost:5001/Setup?endpoint=%5Byour-connection-string%5D&amp;instanceUrl=%5Byour-adt-instance-url%5D" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">https://localhost:5001/Setup?endpoint=[your-connection-string]&amp;instanceUrl=[your-adt-instance-url]</font></font></a></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">构建状态</font></font></h2><a id="user-content-build-status" class="anchor" aria-label="永久链接：构建状态" href="#build-status"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><a href="https://github.com/digitaltwinconsortium/UA-CloudTwin/actions/workflows/docker-build.yml"><img src="https://github.com/digitaltwinconsortium/UA-CloudTwin/actions/workflows/docker-build.yml/badge.svg" alt="码头工人" style="max-width: 100%;"></a></p>
+</article></div>
